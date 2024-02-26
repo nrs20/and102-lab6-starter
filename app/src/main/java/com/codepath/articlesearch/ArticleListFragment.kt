@@ -2,48 +2,48 @@ package com.codepath.articlesearch
 
 import android.os.Bundle
 import android.util.Log
-import androidx.appcompat.app.AppCompatActivity
-import androidx.recyclerview.widget.DividerItemDecoration
+import androidx.fragment.app.Fragment
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.codepath.articlesearch.databinding.ActivityMainBinding
 import com.codepath.asynchttpclient.AsyncHttpClient
 import com.codepath.asynchttpclient.callback.JsonHttpResponseHandler
-import kotlinx.serialization.json.Json
 import okhttp3.Headers
 import org.json.JSONException
 
-fun createJson() = Json {
-    isLenient = true
-    ignoreUnknownKeys = true
-    useAlternativeNames = false
-}
 
-private const val TAG = "MainActivity/"
-private const val SEARCH_API_KEY = BuildConfig.API_KEY
-const val ARTICLE_SEARCH_URL =
-    "https://api.nytimes.com/svc/search/v2/articlesearch.json?api-key=${SEARCH_API_KEY}"
-
-class MainActivity : AppCompatActivity() {
+class ArticleListFragment : Fragment() {
+    // Add these properties
     private val articles = mutableListOf<Article>()
     private lateinit var articlesRecyclerView: RecyclerView
-    private lateinit var binding: ActivityMainBinding
+    private lateinit var articleAdapter: ArticleAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        binding = ActivityMainBinding.inflate(layoutInflater)
-        val view = binding.root
-        setContentView(view)
+    }
 
-        articlesRecyclerView = findViewById(R.id.articles)
-        val articleAdapter = ArticleAdapter(this, articles)
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        // Change this statement to store the view in a variable instead of a return statement
+        val view = inflater.inflate(R.layout.fragment_article_list, container, false)
+
+        // Add these configurations for the recyclerView and to configure the adapter
+        val layoutManager = LinearLayoutManager(context)
+        articlesRecyclerView = view.findViewById(R.id.article_recycler_view)
+        articlesRecyclerView.layoutManager = layoutManager
+        articlesRecyclerView.setHasFixedSize(true)
+        articleAdapter = ArticleAdapter(view.context, articles)
         articlesRecyclerView.adapter = articleAdapter
-        articlesRecyclerView.layoutManager = LinearLayoutManager(this).also {
-            val dividerItemDecoration = DividerItemDecoration(this, it.orientation)
-            articlesRecyclerView.addItemDecoration(dividerItemDecoration)
-        }
 
+        // Update the return statement to return the inflated view from above
+        return view
+    }
+    private fun fetchArticles() {
         val client = AsyncHttpClient()
         client.get(ARTICLE_SEARCH_URL, object : JsonHttpResponseHandler() {
             override fun onFailure(
@@ -52,11 +52,11 @@ class MainActivity : AppCompatActivity() {
                 response: String?,
                 throwable: Throwable?
             ) {
-                Log.e(TAG, "Failed to fetch articles: $statusCode")
+                Log.e("FETCH", "Failed to fetch articles: $statusCode")
             }
 
             override fun onSuccess(statusCode: Int, headers: Headers, json: JSON) {
-                Log.i(TAG, "Successfully fetched articles: $json")
+                Log.i("SUCCESS", "Successfully fetched articles: $json")
                 try {
                     val parsedJson = createJson().decodeFromString(
                         SearchNewsResponse.serializer(),
@@ -67,11 +67,15 @@ class MainActivity : AppCompatActivity() {
                         articleAdapter.notifyDataSetChanged()
                     }
                 } catch (e: JSONException) {
-                    Log.e(TAG, "Exception: $e")
+                    Log.e("ERROR", "Exception: $e")
                 }
             }
 
         })
-
+    }
+    companion object {
+        fun newInstance(): ArticleListFragment {
+            return ArticleListFragment()
+        }
     }
 }
