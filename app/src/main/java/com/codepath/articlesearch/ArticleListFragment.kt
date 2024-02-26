@@ -12,7 +12,10 @@ import com.codepath.asynchttpclient.AsyncHttpClient
 import com.codepath.asynchttpclient.callback.JsonHttpResponseHandler
 import okhttp3.Headers
 import org.json.JSONException
-
+private const val TAG = "ArticleListFragment"
+private const val SEARCH_API_KEY = BuildConfig.API_KEY
+private const val ARTICLE_SEARCH_URL =
+    "https://api.nytimes.com/svc/search/v2/articlesearch.json?api-key=${SEARCH_API_KEY}"
 
 class ArticleListFragment : Fragment() {
     // Add these properties
