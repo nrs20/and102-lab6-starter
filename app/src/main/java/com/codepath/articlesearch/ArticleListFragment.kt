@@ -12,13 +12,14 @@ import com.codepath.asynchttpclient.AsyncHttpClient
 import com.codepath.asynchttpclient.callback.JsonHttpResponseHandler
 import okhttp3.Headers
 import org.json.JSONException
+
 private const val TAG = "ArticleListFragment"
 private const val SEARCH_API_KEY = BuildConfig.API_KEY
 private const val ARTICLE_SEARCH_URL =
     "https://api.nytimes.com/svc/search/v2/articlesearch.json?api-key=${SEARCH_API_KEY}"
 
 class ArticleListFragment : Fragment() {
-    // Add these properties
+
     private val articles = mutableListOf<Article>()
     private lateinit var articlesRecyclerView: RecyclerView
     private lateinit var articleAdapter: ArticleAdapter
@@ -27,6 +28,7 @@ class ArticleListFragment : Fragment() {
         super.onCreate(savedInstanceState)
 
     }
+
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -46,6 +48,14 @@ class ArticleListFragment : Fragment() {
         // Update the return statement to return the inflated view from above
         return view
     }
+
+    companion object {
+        fun newInstance(): ArticleListFragment {
+            return ArticleListFragment()
+        }
+    }
+
+
     private fun fetchArticles() {
         val client = AsyncHttpClient()
         client.get(ARTICLE_SEARCH_URL, object : JsonHttpResponseHandler() {
@@ -55,11 +65,11 @@ class ArticleListFragment : Fragment() {
                 response: String?,
                 throwable: Throwable?
             ) {
-                Log.e("FETCH", "Failed to fetch articles: $statusCode")
+                Log.e(TAG, "Failed to fetch articles: $statusCode")
             }
 
             override fun onSuccess(statusCode: Int, headers: Headers, json: JSON) {
-                Log.i("SUCCESS", "Successfully fetched articles: $json")
+                Log.i(TAG, "Successfully fetched articles: $json")
                 try {
                     val parsedJson = createJson().decodeFromString(
                         SearchNewsResponse.serializer(),
@@ -70,15 +80,16 @@ class ArticleListFragment : Fragment() {
                         articleAdapter.notifyDataSetChanged()
                     }
                 } catch (e: JSONException) {
-                    Log.e("ERROR", "Exception: $e")
+                    Log.e(TAG, "Exception: $e")
                 }
             }
 
         })
     }
-    companion object {
-        fun newInstance(): ArticleListFragment {
-            return ArticleListFragment()
-        }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        // Call the new method within onViewCreated
+        fetchArticles()
     }
 }
